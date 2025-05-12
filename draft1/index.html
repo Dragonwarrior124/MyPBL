@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Pulse - Used Phone Price Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #f3f4f6; /* Light gray text for body */
+            background-color: #1f2937; /* Dark background */
+            min-height: 100vh; /* Full viewport height */
+        }
+
+        /* Hero Section with Background Image and Overlay */
+        .hero-section {
+            background-image: url('/static/images/pexels-lastly-699122.jpg'); /* Path to your image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative; /* Needed for pseudo-element overlay */
+            min-height: 100vh; /* Full viewport height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 80px; /* Space for fixed header */
+        }
+
+        /* Dark Overlay for Hero Section */
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Dark gradient overlay */
+            background: linear-gradient(rgba(0, 0, 50, 0.7), rgba(0, 0, 50, 0.7));
+            z-index: 1; /* Ensure overlay is above background image but below content */
+        }
+
+        /* Ensure content is above the overlay */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center; /* Center text within this container */
+            padding: 120px 20px; /* Specified padding */
+            max-width: 800px; /* Adjusted max-width for centered text */
+            margin: 0 auto; /* Center content container */
+            display: flex;
+            flex-direction: column; /* Stack elements vertically */
+            align-items: center; /* Center items horizontally in the column */
+            justify-content: center;
+        }
+
+        /* Removed media query for side-by-side layout */
+
+
+        /* Header Blur Effect */
+        .header-blur {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); /* Safari support */
+        }
+
+        /* Custom styles for modal transitions and FAB */
+        .fab-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .fab {
+            background-color: #3b82f6; /* Blue */
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 56px;
+            height: 56px;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .fab:hover {
+            background-color: #2563eb;
+            transform: scale(1.1);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            width: 95%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-30px);
+            transition: transform 0.4s ease-out;
+        }
+
+         .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+         }
+
+        .close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.2s ease;
+        }
+
+        .close-button:hover {
+            color: #6b7280;
+        }
+
+        /* Center Button Styling and Hover Effect */
+        #center-predict-button {
+             background-color: #10b981; /* Emerald Green */
+             color: white;
+             font-weight: 600;
+             padding: 12px 24px; /* Specified padding */
+             border-radius: 8px; /* Specified border radius */
+             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Specified box shadow */
+             transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease; /* Add transition */
+             display: inline-flex; /* Align icon and text */
+             align-items: center;
+             justify-content: center;
+        }
+
+        #center-predict-button:hover {
+            background-color: #059669; /* Darker green on hover */
+            transform: scale(1.05); /* Grow on hover */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* More pronounced shadow on hover */
+        }
+
+         /* Hide utility classes */
+        .hidden {
+            display: none;
+        }
+
+        /* Headline Fade-in Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        /* Removed Image Floating Animation */
+
+
+        /* Trust Signal Card Styling */
+        .trust-signal-card {
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            color: #ffffff; /* White text */
+            font-size: 0.875rem; /* text-sm */
+        }
+
+        .trust-signal-card i {
+            color: #F59E0B; /* Amber icon color */
+            margin-right: 8px; /* Space between icon and text */
+        }
+    </style>
+</head>
+<body class="font-sans leading-normal bg-gray-900"> <header class="bg-gray-800 bg-opacity-90 header-blur shadow-md py-6 fixed top-0 left-0 right-0 z-50"> <div class="container mx-auto px-6 flex justify-between items-center">
+            <div class="text-2xl font-bold text-amber-400">Price Pulse</div> <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="#" class="text-gray-300 hover:text-white transition duration-200 relative group">Home
+                         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition duration-200 relative group">About
+                         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition duration-200 relative group">Contact
+                         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a></li>
+                    </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text w-full"> <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-sm font-poppins fade-in" style="letter-spacing: 0.5px; line-height: 1.2;">Unlock the Value of Your Used Phone</h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto" style="line-height: 1.5;">Get an instant, accurate price prediction based on key specifications and condition.</p>
+
+                <button id="center-predict-button" class="shadow-lg transition duration-300 ease-in-out transform">
+                     <i class="fas fa-mobile-alt mr-3"></i> Predict My Phone's Price
+                </button>
+
+                <div class="flex flex-col sm:flex-row justify-center items-center mt-8 space-y-4 sm:space-y-0 sm:space-x-8 text-sm"> <div class="trust-signal-card">
+                        <i class="fas fa-check-circle"></i> <span>Trusted by 10,000+ Users</span>
+                    </div>
+                    <div class="trust-signal-card">
+                        <i class="fas fa-clock"></i> <span>Instant Results</span>
+                    </div>
+                     <div class="trust-signal-card">
+                        <i class="fas fa-shield-alt"></i> <span>Secure & Private</span>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+    </section>
+
+    <div class="fab-container">
+        <button id="open-modal-btn" class="fab">
+            <i class="fas fa-dollar-sign"></i> </button>
+    </div>
+
+    <div id="prediction-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal-btn">&times;</span>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6 text-center">Enter Phone Details</h2>
+
+            <form id="prediction-form">
+                <div class="form-group">
+                    <label for="brand" class="block text-gray-700 text-sm font-bold mb-2">Brand (e.g., Honor, Samsung):</label>
+                    <input type="text" id="brand" name="brand" required class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="os" class="block text-gray-700 text-sm font-bold mb-2">OS (e.g., Android, iOS):</label>
+                    <input type="text" id="os" name="os" required class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                 <div class="form-group">
+                    <label for="screen_size_cm" class="block text-gray-700 text-sm font-bold mb-2">Screen Size (cm, e.g., 15.37):</label>
+                    <input type="number" id="screen_size_cm" name="screen_size_cm" required step="0.01" min="1" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="4g" class="block text-gray-700 text-sm font-bold mb-2">4G (yes/no):</label>
+                    <input type="text" id="4g" name="4g" required class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="5g" class="block text-gray-700 text-sm font-bold mb-2">5G (yes/no):</label>
+                    <input type="text" id="5g" name="5g" required class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="rear_camera_mp" class="block text-gray-700 text-sm font-bold mb-2">Rear Camera MP (e.g., 13):</label>
+                    <input type="number" id="rear_camera_mp" name="rear_camera_mp" required min="1" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                 <div class="form-group">
+                    <label for="front_camera_mp" class="block text-gray-700 text-sm font-bold mb-2">Front Camera MP (e.g., 8):</label>
+                    <input type="number" id="front_camera_mp" name="front_camera_mp" required min="0" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="internal_memory_gb" class="block text-gray-700 text-sm font-bold mb-2">Internal Memory (GB, e.g., 64):</label>
+                    <input type="number" id="internal_memory_gb" name="internal_memory_gb" required min="1" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="ram_gb" class="block text-gray-700 text-sm font-bold mb-2">RAM (GB, e.g., 4):</label>
+                    <input type="number" id="ram_gb" name="ram_gb" required min="1" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="battery_mah" class="block text-gray-700 text-sm font-bold mb-2">Battery (mAh, e.g., 4000):</label>
+                    <input type="number" id="battery_mah" name="battery_mah" required min="500" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="weight_g" class="block text-gray-700 text-sm font-bold mb-2">Weight (g, e.g., 180):</label>
+                    <input type="number" id="weight_g" name="weight_g" required min="50" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="release_year" class="block text-gray-700 text-sm font-bold mb-2">Release Year (e.g., 2020):</label>
+                    <input type="number" id="release_year" name="release_year" required min="2000" max="2025" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <div class="form-group">
+                    <label for="days_used" class="block text-gray-700 text-sm font-bold mb-2">Days Used (e.g., 200):</label>
+                    <input type="number" id="days_used" name="days_used" required min="0" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition duration-300 ease-in-out">Predict Price</button>
+            </form>
+
+            <div id="prediction-result" class="mt-6 p-4 bg-green-100 text-green-800 font-semibold text-lg rounded-md text-center hidden">
+                </div>
+
+            <div id="error-message" class="mt-4 p-3 bg-red-100 text-red-800 border border-red-400 rounded-md hidden">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const centerPredictButton = document.getElementById('center-predict-button');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const predictionModalOverlay = document.getElementById('prediction-modal-overlay');
+        const predictionForm = document.getElementById('prediction-form');
+        const predictionResultDiv = document.getElementById('prediction-result');
+        const errorMessageDiv = document.getElementById('error-message');
+        const headline = document.querySelector('.fade-in'); // Get the headline element
+
+        // Function to open the modal
+        function openModal() {
+            predictionModalOverlay.classList.add('visible');
+            // Reset form and previous results/errors when opening
+            predictionForm.reset();
+            predictionResultDiv.textContent = '';
+            predictionResultDiv.classList.add('hidden'); // Hide result div
+            errorMessageDiv.textContent = '';
+            errorMessageDiv.classList.add('hidden'); // Hide error div
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            predictionModalOverlay.classList.remove('visible');
+        }
+
+        // Event listeners for opening and closing the modal
+        openModalBtn.addEventListener('click', openModal);
+        centerPredictButton.addEventListener('click', openModal); // Link center button to open modal
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // Close modal when clicking outside the modal content
+        predictionModalOverlay.addEventListener('click', (event) => {
+            if (event.target === predictionModalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Handle form submission
+        predictionForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            // Clear previous results and errors
+            predictionResultDiv.textContent = '';
+            predictionResultDiv.classList.add('hidden');
+            errorMessageDiv.textContent = '';
+            errorMessageDiv.classList.add('hidden');
+
+            // Collect form data
+            const formData = new FormData(predictionForm);
+            const data = {};
+            formData.forEach((value, key) => {
+                // Convert numerical inputs to numbers where appropriate
+                if (['screen_size_cm', 'rear_camera_mp', 'front_camera_mp', 'internal_memory_gb', 'ram_gb', 'battery_mah', 'weight_g', 'release_year', 'days_used'].includes(key)) {
+                     // Use parseFloat for numerical, handle empty string
+                    data[key] = value === '' ? null : parseFloat(value);
+                } else {
+                    data[key] = value; // Keep categorical as strings
+                }
+            });
+
+            console.log('Sending data:', data); // Log data being sent
+
+            // Send data to Flask backend
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Display the predicted price
+                    predictionResultDiv.textContent = `Predicted Price: $${result.predicted_price.toFixed(2)}`;
+                    predictionResultDiv.classList.remove('hidden'); // Show result div
+                } else {
+                    // Display error message from backend
+                    errorMessageDiv.textContent = `Error: ${result.error || 'An unknown error occurred.'}`;
+                    errorMessageDiv.classList.remove('hidden'); // Show error div
+                    console.error('Backend error:', result.error); // Log backend error
+                }
+
+            } catch (error) {
+                // Handle network or other fetch errors
+                errorMessageDiv.textContent = `Prediction failed: ${error.message}. Make sure the Flask server is running.`;
+                errorMessageDiv.classList.remove('hidden'); // Show error div
+                console.error('Fetch error:', error); // Log fetch error
+            }
+        });
+
+        // Trigger fade-in animation on page load
+        window.addEventListener('load', () => {
+            headline.classList.add('fade-in');
+        });
+    </script>
+</body>
+</html>
